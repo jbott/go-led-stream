@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"github.com/jacobsa/go-serial/serial"
@@ -28,21 +29,38 @@ func main() {
 
 	defer port.Close()
 
+	buf_in := bufio.NewReader(port)
+
 	log.Print("Waiting for arduino to reset...")
-	time.Sleep(5 * time.Second)
-	log.Print("DONE")
+	time.Sleep(1000)
 
-	cmd_buf := new(bytes.Buffer)
-	cmd_buf.Write(SetFlags(FLAG_PAUSE_GHUE))
-	cmd_buf.Write(Rainbow(5 * 1000))
-	cmd_buf.Write(SetFlags(0))
-	cmd_buf.Write(Rainbow(10 * 1000))
-	cmd_buf.Write(SetFlags(FLAG_PAUSE_GHUE))
-	cmd_buf.Write(Rainbow(5 * 1000))
-	cmd_buf.Write(SetFlags(FLAG_REVERSE_GHUE))
-	cmd_buf.Write(Rainbow(10 * 1000))
-	packet := WrapHeaderCRC(PACKET_SET_CMDS, cmd_buf.Bytes())
+	str, err := buf_in.ReadString('\n')
+	if err != nil {
+		log.Fatalf("Error reading port: %v", err)
+	}
+	log.Print(str)
 
+	purple := Color{127, 0, 100}
+	dark_purple := purple.Scale(0.1)
+
+	c := new(bytes.Buffer)
+	c.Write(FadeRGB(dark_purple, purple, 5*1000))
+	c.Write(FillSolidRGB(purple, 10*1000))
+	c.Write(FadeRGB(purple, dark_purple, 5*1000))
+	c.Write(FillSolidRGB(dark_purple, 10*1000))
+	c.Write(FadeRGB(dark_purple, purple, 5*1000))
+
+	c.Write(Rainbow(20 * 1000))
+	c.Write(SetFlags(FLAG_REVERSE_GHUE))
+	c.Write(Rainbow(20 * 1000))
+
+	c.Write(FadeToBlack(1, 2*1000))
+
+	c.Write(ConfettiDefault(20 * 1000))
+
+	packet := WrapHeaderCRC(PACKET_SET_CMDS, c.Bytes())
+
+	log.Printf("Packet length: %v", len(packet))
 	log.Print(packet)
 	port.Write(packet)
 	time.Sleep(10000 * time.Second)
@@ -64,10 +82,21 @@ func (c *Color) UpdateColor(r uint8, g uint8, b uint8) {
 	c.B = b
 }
 
+func (c Color) Scale(scalar float32) Color {
+	c.R = uint8(float32(c.R) * scalar)
+	c.G = uint8(float32(c.G) * scalar)
+	c.B = uint8(float32(c.B) * scalar)
+	return c
+}
+
 const (
-	CMD_SET_FLAGS = iota
-	CMD_RAINBOW   = iota
-	CMD_FADE_RGB  = iota
+	CMD_SET_FLAGS      = iota
+	CMD_OFF            = iota
+	CMD_FILL_SOLID_RGB = iota
+	CMD_RAINBOW        = iota
+	CMD_FADE_RGB       = iota
+	CMD_FADE_TO_BLACK  = iota
+	CMD_CONFETTI       = iota
 )
 
 type Command struct {
@@ -138,6 +167,42 @@ func SetFlags(flags uint8) []byte {
 		return NewCommand(CMD_SET_FLAGS, 0).WithParams(
 			SetFlagsParams{flags})
 	}
+}
+
+type FillSolidParams struct {
+	color Color
+}
+
+func FillSolidRGB(color Color, duration uint16) []byte {
+	return NewCommand(CMD_FILL_SOLID_RGB, duration).WithParams(
+		FillSolidParams{color})
+}
+
+func Off(duration uint16) []byte {
+	return NewCommand(CMD_OFF, duration).Bytes()
+}
+
+type FadeToBlackParams struct {
+	fadeBy uint8
+}
+
+func FadeToBlack(fadeBy uint8, duration uint16) []byte {
+	return NewCommand(CMD_FADE_TO_BLACK, duration).WithParams(
+		FadeToBlackParams{fadeBy})
+}
+
+type ConfettiParams struct {
+	count  uint8
+	fadeBy uint8
+}
+
+func ConfettiDefault(duration uint16) []byte {
+	return NewCommand(CMD_CONFETTI, duration).Bytes()
+}
+
+func Confetti(count uint8, fadeBy uint8, duration uint16) []byte {
+	return NewCommand(CMD_CONFETTI, duration).WithParams(
+		ConfettiParams{count, fadeBy})
 }
 
 const (

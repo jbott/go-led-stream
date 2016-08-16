@@ -32,15 +32,23 @@ long last_frame_millis = 0;
 
 enum FUNC_INDEX : uint8_t {
   SET_FLAGS = 0,
+  OFF,
+  FILL_SOLID_RGB,
   RAINBOW,
   FADE_RGB,
+  FADE_TO_BLACK,
+  CONFETTI,
   COMMAND_LENGTH
 };
 
 funcList gFuncs = {
   set_flags,
+  off,
+  fill_solid_rgb,
   rainbow,
-  fade_rgb
+  fade_rgb,
+  fade_to_black,
+  confetti
 };
 
 void setup() {
@@ -50,6 +58,8 @@ void setup() {
   Serial.setTimeout(SERIAL_TIMEOUT);
 
   FastLED.addLeds<PIXEL_LED_TYPE,PIXEL_PIN,PIXEL_COLOR_ORDER>(leds, PIXEL_NUM).setCorrection(TypicalLEDStrip);
+
+  Serial.println("led_stream (" __DATE__ " " __TIME__ ")");
 }
 
 void loop() {
