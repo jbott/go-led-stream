@@ -119,6 +119,7 @@ void loop() {
     FastLED.setBrightness(PIXEL_BRIGHTNESS);
     exec_pos = command_buffer;
     gFlags = FLAG_NONE;
+    cmd_start_millis = 0;
   }
 
   COMMAND *c = (struct COMMAND*) exec_pos;
