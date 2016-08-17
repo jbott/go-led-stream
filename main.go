@@ -1,44 +1,23 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
-	"github.com/jacobsa/go-serial/serial"
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"hash/crc32"
 	"log"
-	"time"
 )
 
 func main() {
-	log.Print("Opening serial port...")
+	log.Print("Connecting to MQTT...")
 
-	serial_options := serial.OpenOptions{
-		PortName:              "/dev/cu.usbmodem31",
-		BaudRate:              57600,
-		DataBits:              8,
-		StopBits:              1,
-		MinimumReadSize:       2,
-		InterCharacterTimeout: 0,
+	opts := MQTT.NewClientOptions().AddBroker("tcp://192.168.1.21:1883")
+	opts.SetClientID("go-simple")
+
+	client := MQTT.NewClient(opts)
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
 	}
-
-	port, err := serial.Open(serial_options)
-	if err != nil {
-		log.Fatalf("serial.Open: %v", err)
-	}
-
-	defer port.Close()
-
-	buf_in := bufio.NewReader(port)
-
-	log.Print("Waiting for arduino to reset...")
-	time.Sleep(1000)
-
-	str, err := buf_in.ReadString('\n')
-	if err != nil {
-		log.Fatalf("Error reading port: %v", err)
-	}
-	log.Print(str)
 
 	purple := Color{127, 0, 100}
 	dark_purple := purple.Scale(0.1)
@@ -62,8 +41,8 @@ func main() {
 
 	log.Printf("Packet length: %v", len(packet))
 	log.Print(packet)
-	port.Write(packet)
-	time.Sleep(10000 * time.Second)
+	token := client.Publish("device/led0/cmd", 0, true, packet)
+	token.Wait()
 }
 
 type Color struct {

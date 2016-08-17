@@ -1,3 +1,7 @@
+#include <SPI.h>
+#include <Ethernet.h>
+#include <PubSubClient.h>
+
 #include "FastLED.h"
 #include "commands.h"
 #include "config.h"
@@ -19,6 +23,16 @@ FASTLED_USING_NAMESPACE
 #define FLAG_NONE         (0)
 #define FLAG_PAUSE_GHUE   (1 << 0)
 #define FLAG_REVERSE_GHUE (1 << 1)
+
+// Update these with values suitable for your hardware/network.
+byte mac[] = ETH_MAC_ADDR;
+IPAddress ip(IP_STATIC_ADDR);
+IPAddress server(IP_MQTT_ADDR);
+
+EthernetClient ethClient;
+PubSubClient client(ethClient);
+
+long lastReconnectAttempt = 0;
 
 CRGB leds[PIXEL_NUM];
 uint8_t gFlags = FLAG_NONE;
@@ -51,21 +65,56 @@ funcList gFuncs = {
   confetti
 };
 
-void setup() {
-  delay(3000);
+void mqtt_subscribe() {
+	client.subscribe("device/led0/cmd");
+}
 
+boolean reconnect() {
+	Serial.print(F("MQTT connecting..."));
+  if (client.connect("arduinoClient")) {
+		Serial.println(F(" connected"));
+		mqtt_subscribe();
+  } else {
+		Serial.println(F(" failed"));
+	}
+  return client.connected();
+}
+
+void setup() {
   Serial.begin(SERIAL_BAUD);
-  Serial.setTimeout(SERIAL_TIMEOUT);
+
+  // Begin MQTT
+  client.setServer(server, IP_MQTT_PORT);
+  client.setCallback(callback);
+  Ethernet.begin(mac, ip);
+
+  Serial.println(F("led_stream (" __DATE__ " " __TIME__ ")"));
+  delay(3000);
+  Serial.println(F("DONE"));
 
   FastLED.addLeds<PIXEL_LED_TYPE,PIXEL_PIN,PIXEL_COLOR_ORDER>(leds, PIXEL_NUM).setCorrection(TypicalLEDStrip);
 
-  Serial.println("led_stream (" __DATE__ " " __TIME__ ")");
 }
 
 void loop() {
+	if (!client.connected()) {
+		long now = millis();
+		if (now - lastReconnectAttempt > 5000) {
+			lastReconnectAttempt = now;
+			// Attempt to reconnect
+			if (reconnect()) {
+				lastReconnectAttempt = 0;
+			}
+		}
+	} else {
+		// Client connected
+		client.loop();
+	}
+
 	if (command_buffer_size == 0) return;
 
   if (exec_pos == NULL || exec_pos >= command_buffer + command_buffer_size) {
+    Serial.println(F("START"));
     // Set starting configuration
     FastLED.setBrightness(PIXEL_BRIGHTNESS);
     exec_pos = command_buffer;
@@ -79,7 +128,7 @@ void loop() {
     cmd_start_millis = millis();
 
     // Debug
-    Serial.println("COMMAND");
+    Serial.println(F("COMMAND"));
     Serial.println(c->index);
     Serial.println(c->duration);
     Serial.println(c->params_size);
@@ -111,62 +160,49 @@ void loop() {
 
 uint8_t header[] = { 0xDE, 0xAD, 0xBE, 0xEF };
 
-void serialEvent() {
-  // Check for header
-  uint8_t read[6];
-  Serial.readBytes(read, 6);
+void callback(char* topic, byte* payload, unsigned int length) {
+  for (int i = 0; i < length; i++) {
+    Serial.print(payload[i], HEX);
+    if (i + 1 != length)
+      Serial.print(" ");
+  }
+
+  Serial.println();
+	if (length < 6) {
+		Serial.println(F("PACKET TOO SHORT"));
+		return;
+	}
+
   for (int i = 0; i < sizeof(header); i++) {
-    if (read[i] != header[i]) {
+    if (payload[i] != header[i]) {
       return;
     }
   }
-  Serial.println("HEADER_FOUND");
+  Serial.println(F("HEADER_FOUND"));
 
   // Header found!
-  int packet_type = read[4];
-  int packet_length = read[5];
-  Serial.print("TYPE: "); Serial.println(packet_type, HEX);
-  Serial.print("LENGTH: "); Serial.println(packet_length, HEX);
-
-  uint8_t data[packet_length];
-  int n = Serial.readBytes(data, packet_length);
-  if (n != packet_length) {
-    while (Serial.available()) {
-      Serial.read();
-    }
-    return;
-  }
-  for (int i = 0; i < sizeof(data); i++) {
-    Serial.print(data[i], HEX);
-    if (i + 1 != sizeof(data))
-      Serial.print(" ");
-  }
-  Serial.println();
+  int packet_type = payload[4];
+  int packet_length = payload[5];
+  Serial.print(F("TYPE: ")); Serial.println(packet_type, HEX);
+  Serial.print(F("LENGTH: ")); Serial.println(packet_length, HEX);
 
   // Checksum
   uint8_t checksum[4];
-  Serial.readBytes(checksum, 4);
+	memcpy(checksum, payload + (length - 4), 4);
   long given_crc = (long)checksum[0] | ((long)checksum[1] << 8) | ((long)checksum[2] << 16) | ((long)checksum[3] << 24);
-  long our_crc = crc32(data, packet_length);
+  long our_crc = crc32(&(payload[6]), packet_length);
   if (given_crc != our_crc) {
-    Serial.print("GIVEN: "); Serial.println(given_crc, HEX);
-    Serial.print("OURS:  "); Serial.println(our_crc, HEX);
-    while (Serial.available()) {
-      Serial.read();
-    }
+    Serial.print(F("GIVEN: ")); Serial.println(given_crc, HEX);
+    Serial.print(F("OURS:  ")); Serial.println(our_crc, HEX);
     return;
   }
 
-  memcpy(command_buffer, data, packet_length);
+  memcpy(command_buffer, &(payload[6]), packet_length);
   command_buffer_size = packet_length;
   exec_pos = NULL;
-
-  while (Serial.available()) {
-    Serial.read();
-  }
 }
 
-const static PROGMEM prog_uint32_t crc_table[16] = {
+const uint32_t PROGMEM crc_table[16] = {
     0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
     0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
     0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
@@ -183,7 +219,7 @@ unsigned long crc_update(unsigned long crc, byte data)
     return crc;
 }
 
-unsigned long crc32(uint8_t *data, size_t size)
+unsigned long crc32(byte *data, size_t size)
 {
   unsigned long crc = ~0L;
   for (int i=0; i < size; i++) {
