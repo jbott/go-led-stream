@@ -1,1 +1,1 @@
-MQTT_MAX_PACKET_SIZE must be increased to accomindate the 256 byte command buffer. I used MQTT_MAX_PACKET_SIZE = 260 just for safety
+MQTT_MAX_PACKET_SIZE must be increased to accomindate the 200 byte command buffer. I used MQTT_MAX_PACKET_SIZE = 210 just for safety

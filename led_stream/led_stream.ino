@@ -38,7 +38,7 @@ CRGB leds[PIXEL_NUM];
 uint8_t gFlags = FLAG_NONE;
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
-uint8_t command_buffer[256];
+uint8_t command_buffer[200];
 int command_buffer_size = 0;
 void *exec_pos = NULL;
 long cmd_start_millis = 0;
@@ -162,6 +162,12 @@ void loop() {
 uint8_t header[] = { 0xDE, 0xAD, 0xBE, 0xEF };
 
 void callback(char* topic, byte* payload, unsigned int length) {
+  if (length > sizeof(command_buffer)) {
+    // Reject if too large
+    Serial.println(F("PACKET TOO LARGE"));
+    return;
+  }
+
   for (int i = 0; i < length; i++) {
     Serial.print(payload[i], HEX);
     if (i + 1 != length)
