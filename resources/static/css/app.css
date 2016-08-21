@@ -1,0 +1,57 @@
+body {
+  padding-top: 70px;
+}
+
+#entries {
+  list-style-type: none;
+  padding-left: 0;
+  width: 100%;
+
+  font-size: 24px;
+}
+
+#entries > li.sortable-ghost {
+  opacity: 0.25;
+}
+
+.drag-handle {
+  margin-right: 1em;
+}
+
+.drag-handle:hover {
+  cursor: pointer;
+}
+
+.remove {
+  margin-left: 1em;
+}
+
+.remove:hover {
+  cursor: pointer;
+}
+
+#entries label {
+  color: rgba(0,0,0,0.87);
+}
+
+#entries .form-group {
+  margin: 0;
+}
+
+.sp-palette-row-selection {
+  width: 20px;
+}
+
+.btn-fab.fab-add {
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
+
+  background-color: #03a9f4 !important;
+}
+
+.entry-selector .drag-handle,
+.entry-selector .remove,
+.entry-selector .show-hide {
+  color: rgba(0,0,0,0.75);
+}

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>LED STREAM</title>
+
+    <!-- Material Design fonts -->
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/icon?family=Material+Icons">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- Bootstrap Material Design -->
+    <link href="static/css/bootstrap-material-design.css" rel="stylesheet">
+    <link href="static/css/ripples.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+
+    <link href="static/css/spectrum.css" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="static/css/app.css">
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-info navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="btn-update navbar-toggle">
+            Update
+          </button>
+          <a class="navbar-brand" href="/">LED STREAM</a>
+        </div>
+        <div class="navbar-collapse collapse navbar-responsive-collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a class="btn-update">Update</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="row">
+        <div class="col-md-12">
+
+          <ul id="entries">
+
+            <script type="text/template" id="template-set-flags">
+            <li class="panel well-lg">
+              <div class="entry-selector clearfix">
+                <span class="drag-handle pull-left"><i class="fa fa-bars" aria-hidden="true"></i></span>
+                <span class="command pull-left">SET FLAGS</span>
+                <span class="remove pull-right"><i class="fa fa-times" aria-hidden="true"></i></span>
+                <span class="show-hide pull-right"><i class="fa fa-chevron-up" aria-hidden="true"></i></span>
+              </div>
+
+
+              <div class="row entry-content">
+                <input type="hidden" name="cmd" value="SET_FLAGS"/>
+                <div class="col-md-2 col-md-offset-1">
+                  <div class="checkbox">
+                    <label><input name="flag_pause_ghue" type="checkbox"> Pause gHue</label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="checkbox">
+                    <label><input name="flag_reverse_ghue" type="checkbox"> Reverse gHue</label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            </script>
+
+            <script type="text/template" id="template-off">
+            <li class="panel well-lg">
+              <div class="entry-selector clearfix">
+                <span class="drag-handle pull-left"><i class="fa fa-bars" aria-hidden="true"></i></span>
+                <span class="command pull-left">OFF</span>
+                <span class="remove pull-right"><i class="fa fa-times" aria-hidden="true"></i></span>
+                <span class="show-hide pull-right"><i class="fa fa-chevron-up" aria-hidden="true"></i></span>
+              </div>
+
+              <div class="row entry-content">
+                <input type="hidden" name="cmd" value="OFF"/>
+                <div class="col-md-10 col-md-offset-1">
+                  <div class="form-group">
+                    <label class="control-label">Duration
+                      <input type="number" class="form-control" name="duration" value="1000">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            </script>
+
+            <script type="text/template" id="template-fill-solid-rgb">
+            <li class="panel well-lg">
+              <div class="entry-selector clearfix">
+                <span class="drag-handle pull-left"><i class="fa fa-bars" aria-hidden="true"></i></span>
+                <span class="command pull-left">FILL SOLID RGB</span>
+                <span class="remove pull-right"><i class="fa fa-times" aria-hidden="true"></i></span>
+                <span class="show-hide pull-right"><i class="fa fa-chevron-up" aria-hidden="true"></i></span>
+              </div>
+
+              <div class="row entry-content">
+                <input type="hidden" name="cmd" value="FILL_SOLID_RGB"/>
+                <div class="col-md-2 col-md-offset-1">
+                  <div class="form-group">
+                    <label class="control-label">Duration
+                      <input type="number" class="form-control" name="duration" value="1000">
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label>
+                      <input type="text" class="colorpicker" name="color" value="#000000"/>
+                      Color
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            </script>
+
+            <script type="text/template" id="template-rainbow">
+            <li class="panel well-lg">
+              <div class="entry-selector clearfix">
+                <span class="drag-handle pull-left"><i class="fa fa-bars" aria-hidden="true"></i></span>
+                <span class="command pull-left">RAINBOW</span>
+                <span class="remove pull-right"><i class="fa fa-times" aria-hidden="true"></i></span>
+                <span class="show-hide pull-right"><i class="fa fa-chevron-up" aria-hidden="true"></i></span>
+              </div>
+
+              <div class="row entry-content">
+                <input type="hidden" name="cmd" value="RAINBOW"/>
+                <div class="col-md-10 col-md-offset-1">
+                  <div class="form-group">
+                    <label class="control-label">Duration
+                      <input type="number" class="form-control" name="duration" value="1000">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            </script>
+
+            <script type="text/template" id="template-fade-rgb">
+            <li class="panel well-lg">
+              <div class="entry-selector clearfix">
+                <span class="drag-handle pull-left"><i class="fa fa-bars" aria-hidden="true"></i></span>
+                <span class="command pull-left">FADE RGB</span>
+                <span class="remove pull-right"><i class="fa fa-times" aria-hidden="true"></i></span>
+                <span class="show-hide pull-right"><i class="fa fa-chevron-up" aria-hidden="true"></i></span>
+              </div>
+
+              <div class="row entry-content">
+                <input type="hidden" name="cmd" value="FADE_RGB"/>
+                <div class="col-md-2 col-md-offset-1">
+                  <div class="form-group">
+                    <label class="control-label">Duration
+                      <input type="number" class="form-control" name="duration" value="1000">
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label>
+                      <input type="text" class="colorpicker" name="start_color" value="#000000"/>
+                      Start Color
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label>
+                      <input type="text" class="colorpicker" name="end_color" value="#000000"/>
+                      End Color
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            </script>
+
+            <script type="text/template" id="template-fade-to-black">
+            <li class="panel well-lg">
+              <div class="entry-selector clearfix">
+                <span class="drag-handle pull-left"><i class="fa fa-bars" aria-hidden="true"></i></span>
+                <span class="command pull-left">FADE TO BLACK</span>
+                <span class="remove pull-right"><i class="fa fa-times" aria-hidden="true"></i></span>
+                <span class="show-hide pull-right"><i class="fa fa-chevron-up" aria-hidden="true"></i></span>
+              </div>
+
+              <div class="row entry-content">
+                <input type="hidden" name="cmd" value="FADE_TO_BLACK"/>
+                <div class="col-md-2 col-md-offset-1">
+                  <div class="form-group">
+                    <label class="control-label">Duration
+                      <input type="number" class="form-control" name="duration" value="1000">
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label class="control-label">Fade By
+                      <input type="number" class="form-control" name="fade_by" value="1">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            </script>
+
+            <script type="text/template" id="template-confetti">
+            <li class="panel well-lg">
+              <div class="entry-selector clearfix">
+                <span class="drag-handle pull-left"><i class="fa fa-bars" aria-hidden="true"></i></span>
+                <span class="command pull-left">CONFETTI</span>
+                <span class="remove pull-right"><i class="fa fa-times" aria-hidden="true"></i></span>
+                <span class="show-hide pull-right"><i class="fa fa-chevron-up" aria-hidden="true"></i></span>
+              </div>
+
+              <div class="row entry-content">
+                <input type="hidden" name="cmd" value="CONFETTI"/>
+                <div class="col-md-2 col-md-offset-1">
+                  <div class="form-group">
+                    <label class="control-label">Duration
+                      <input type="number" class="form-control" name="duration" value="1000">
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label class="control-label">Count
+                      <input type="number" class="form-control" name="count" value="1">
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                    <label class="control-label">Fade By
+                      <input type="number" class="form-control" name="fade_by" value="10">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            </script>
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    </div><!-- /.container -->
+
+    <a class="btn btn-info btn-fab fab-add" data-toggle="modal" data-target="#entry-picker"><i class="material-icons">add</i><div class="ripple-container"></div></a>
+
+    <div class="modal" id="entry-picker">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h4 class="modal-title">Select Command</h4>
+          </div>
+          <div class="modal-body">
+            <a href="javascript:void(0)" class="btn btn-default btn-add-entry" data-template="#template-set-flags">SET FLAGS<div class="ripple-container"></div></a>
+            <a href="javascript:void(0)" class="btn btn-default btn-add-entry" data-template="#template-off">OFF<div class="ripple-container"></div></a>
+            <a href="javascript:void(0)" class="btn btn-default btn-add-entry" data-template="#template-fill-solid-rgb">FILL SOLID RGB<div class="ripple-container"></div></a>
+            <a href="javascript:void(0)" class="btn btn-default btn-add-entry" data-template="#template-rainbow">RAINBOW<div class="ripple-container"></div></a>
+            <a href="javascript:void(0)" class="btn btn-default btn-add-entry" data-template="#template-fade-rgb">FADE RGB<div class="ripple-container"></div></a>
+            <a href="javascript:void(0)" class="btn btn-default btn-add-entry" data-template="#template-fade-to-black">FADE TO BLACK<div class="ripple-container"></div></a>
+            <a href="javascript:void(0)" class="btn btn-default btn-add-entry" data-template="#template-confetti">CONFETTI<div class="ripple-container"></div></a>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+      ================================================== -->
+      <!-- Placed at the end of the document so the pages load faster -->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+      <script src="static/js/material.js"></script>
+      <script src="static/js/ripples.min.js"></script>
+
+      <!-- Latest Sortable -->
+      <script src="http://rubaxa.github.io/Sortable/Sortable.js"></script>
+
+      <script src="static/js/spectrum.js"></script>
+
+      <script>
+        $.material.init();
+
+        Sortable.create($("#entries")[0], {
+          handle: '.drag-handle',
+          animation: 100
+        });
+        $(".entry-content").hide();
+
+        function remove() {
+          $(this).parent().parent().remove();
+        }
+        $(".remove").click(remove);
+
+        function show_hide() {
+          fa_icon = $(this).children("i");
+          if (fa_icon.hasClass("fa-chevron-down")) {
+            fa_icon.removeClass("fa-chevron-down");
+            fa_icon.addClass("fa-chevron-up");
+            $(this).parent().parent().children(".entry-content").slideDown();
+          } else {
+            fa_icon.removeClass("fa-chevron-up");
+            fa_icon.addClass("fa-chevron-down");
+            $(this).parent().parent().children(".entry-content").slideUp();
+          }
+        }
+        $(".show-hide").click(show_hide);
+
+        $(".colorpicker").spectrum({
+          showPalette: true,
+          palette: [ ],
+          hideAfterPaletteSelect: true,
+          showButtons: false,
+          localStorageKey: "spectrum.led_stream",
+          maxSelectionSize: 6,
+          preferredFormat: "hex"
+        });
+
+        $(".btn-update").click(function() {
+          buf = new Object();
+          buf.entries = [];
+
+          for (entry of $("#entries").children()) {
+            data = new Object();
+            for (input of $("input", entry)) {
+              data[input.name] = input.value;
+            }
+            buf.entries.push(data);
+          }
+
+
+          data = JSON.stringify(buf);
+          console.log(data);
+
+          $.ajax({
+            method: "POST",
+            url: "/cmd",
+            data: data,
+            contentType: "application/json; charset=utf-8",
+            success: function() {
+              console.log("SUCCEEDED");
+            }
+          }).fail(function() {
+            console.log("FAILED");
+          });
+        });
+
+        function add_entry(templ) {
+          $("#entries").append($(templ).html());
+          $("#entry-picker").modal("hide");
+
+          entry = $("#entries").children().last();
+          $(".remove", entry).click(remove);
+          $(".show-hide", entry).click(show_hide);
+          $(".colorpicker", entry).spectrum({
+            showPalette: true,
+            palette: [ ],
+            hideAfterPaletteSelect: true,
+            showButtons: false,
+            localStorageKey: "spectrum.led_stream",
+            maxSelectionSize: 6,
+            preferredFormat: "hex"
+          });
+
+          $.material.init();
+        }
+
+        $(".btn-add-entry").click(function() {
+          add_entry($(this).data("template"));
+        });
+      </script>
+  </body>
+</html>
+
