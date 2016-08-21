@@ -55,3 +55,7 @@ body {
 .entry-selector .show-hide {
   color: rgba(0,0,0,0.75);
 }
+
+.btn-add-entry {
+  display: block;
+}
