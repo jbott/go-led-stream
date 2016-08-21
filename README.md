@@ -15,6 +15,7 @@ The basic architure is laid out below:
 - Send frames to the strand
 
 #### Go
+- Serve a webpage to allow editing of configuration
 - Act as the controller for the Arduino
 - Build bytecode to run different patters
 - Wrap that bytecode in a packet and send it over
