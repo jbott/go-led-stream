@@ -110,10 +110,10 @@ func EntryToBytes(e Entry) []byte {
 
 		params := SetFlagsParams{}
 
-		if e.Flag_pause_ghue == "on" {
+		if e.Flag_pause_ghue == "true" {
 			params.flags += FLAG_PAUSE_GHUE
 		}
-		if e.Flag_reverse_ghue == "on" {
+		if e.Flag_reverse_ghue == "true" {
 			params.flags += FLAG_REVERSE_GHUE
 		}
 

@@ -350,7 +350,11 @@
           for (entry of $("#entries").children()) {
             data = new Object();
             for (input of $("input", entry)) {
-              data[input.name] = input.value;
+              if ($(input).prop("type") == "checkbox") {
+                data[input.name] = String($(input).prop('checked'));
+              } else {
+                data[input.name] = input.value;
+              }
             }
             buf.entries.push(data);
           }
