@@ -28,7 +28,6 @@ func StartMQTT() {
 	fmt.Print("Connecting to MQTT...\n")
 
 	opts := MQTT.NewClientOptions().AddBroker("tcp://192.168.1.21:1883")
-	opts.SetClientID("go-simple")
 
 	client := MQTT.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
